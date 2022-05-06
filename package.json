@@ -11,7 +11,7 @@
   "bin": {
     "filebit": "./bin/bin.js --no-warnings"
   },
-  "author": "",
+  "author": "Damian Maslow",
   "license": "ISC",
   "dependencies": {
     "commander": "^9.2.0",
