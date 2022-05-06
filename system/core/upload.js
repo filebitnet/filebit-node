@@ -8,8 +8,15 @@ import {
   getSliceOffset
 } from './utils.js';
 import ora from 'ora';
+import {
+  EventEmitter
+} from 'node:events';
 
-export default class CUpload {
+export default class CUpload extends EventEmitter {
+  constructor() {
+    super();
+  }
+
   async init(path, filename = false) {
     this._path = path;
     this._handle = new CFile;
@@ -95,7 +102,7 @@ export default class CUpload {
     if (this._progressFnSet) {
       return this._progressFn(...arguments);
     }
-    const perc = Number((done / total) * 100).toFixed(2);
+    const perc = Math.min(100, Number((done / total) * 100).toFixed(2));
     const left = 100 - perc;
     if (!(ident in this._progressMap)) {
       this._progressMap[ident] = ora('Loading unicorns').start();
@@ -211,6 +218,7 @@ export default class CUpload {
         len += encrypted.byteLength;
         const response = await this._api.upload(Server, this._upload_id, chunk_id, offset, encrypted, this._ratelimit, this);
         if (this.isAborted()) {
+          this._slices.push(offset);
           continue;
         }
         this._crcMap[chunk_id] = response.crc32;
@@ -223,7 +231,7 @@ export default class CUpload {
       return;
     }
     if (this.isAborted()) {
-
+      this.__destruct();
       this._progressMap['progress'].fail('upload aborted');
       console.log(this._slices)
     } else {
@@ -232,6 +240,8 @@ export default class CUpload {
       }
       const Server = this._pickServer();
       await this._storeUploadRequest(Server, this._upload_id);
+      this.emit('finish', this.getLink());
+      this.__destruct();
     }
   }
 

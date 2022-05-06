@@ -8,9 +8,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "filebit": "./bin/bin.js --no-warnings"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "commander": "^9.2.0",
     "form-data": "^4.0.0",
     "native-fetch": "^4.0.2",
     "node-fetch": "^3.2.4",
