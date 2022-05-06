@@ -71,3 +71,12 @@ export const getSliceOffset = (fileSize) => {
   }
   return chunklist;
 }
+
+export default {
+  formatSize,
+  getRegex,
+  isValidURL,
+  getParts,
+  basename,
+  getSliceOffset
+}

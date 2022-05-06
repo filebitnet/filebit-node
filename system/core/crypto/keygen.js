@@ -1,7 +1,8 @@
 //nodeJS keygen
-const {
+import {
   randomBytes
-} = require('crypto');
+} from 'node:crypto';
+
 
 
 /**
@@ -11,7 +12,7 @@ const {
  * @param {Number} [bit=128] - the bits to generate
  * @return Buffer - the generated random bytes
  */
-module.exports = (bit = 128) => {
+export default (bit = 128) => {
   let len = bit / 8;
   let rb = randomBytes(len);
   return rb;

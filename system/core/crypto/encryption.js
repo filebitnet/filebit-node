@@ -1,14 +1,14 @@
 /** @package */
 /** @module crypto */
-const {
+import {
   createCipheriv,
   createDecipheriv
-} = require('crypto');
-const utils = require('./utils.cjs');
-const sha256 = require('./sha256.cjs');
-const base64 = require('./base64.cjs');
+} from 'node:crypto';
+import utils from './utils.js';
+import sha256 from './sha256.js';
+import base64 from './base64.js';
 
-module.exports.nameKeySizeHash = async(name, size, key) => {
+export const nameKeySizeHash = async(name, size, key) => {
   utils.assert_undef(name, 'name is undefined');
   utils.assert_undef(size, 'size is undefined');
   utils.assert_undef(key, 'key is undefined');
@@ -36,7 +36,7 @@ module.exports.nameKeySizeHash = async(name, size, key) => {
  * const merged = await CryptoLib.crypto.mergeKeyIv(key, iv);
  * @return Buffer - the combined buffer of key&iv + version information
  */
-module.exports.mergeKeyIv = (key, iv) => {
+export const mergeKeyIv = (key, iv) => {
   let buf = Buffer.alloc(key.length + iv.length);
   let bufArr = [Buffer.alloc(1, 0x1)];
   for (let i = 0; i < buf.length; ++i) {
@@ -62,7 +62,7 @@ module.exports.mergeKeyIv = (key, iv) => {
  * // unmerged.key, unmerged.iv & unmerged.iv are of type Buffer
  * @return Buffer - the combined buffer of key&iv + version information
  */
-module.exports.unmergeKeyIv = (buf) => {
+export const unmergeKeyIv = (buf) => {
   if (!!((buf.length - 1) % 2)) {
     throw new Error("wrong buf length");
   }
@@ -96,7 +96,7 @@ module.exports.unmergeKeyIv = (buf) => {
  * const encrypt = await CryptoLib.crypto.encrypt(data, key, iv);
  * @return Buffer - the encrypted data
  */
-module.exports.encrypt = (data, key, iv = false) => {
+export const encrypt = (data, key, iv = false) => {
   utils.assert_buf(data, 'data needs to be buffer');
   utils.assert_buf(key, 'key needs to be buffer');
   utils.assert_buf(iv, 'iv needs to be buffer');
@@ -123,7 +123,7 @@ module.exports.encrypt = (data, key, iv = false) => {
  * const encrypt = await CryptoLib.crypto.decrypt(data, key, iv);
  * @return Buffer - the encrypted data
  */
-module.exports.decrypt = (data, key, iv) => {
+export const decrypt = (data, key, iv) => {
   utils.assert_buf(data, 'data needs to be buffer');
   utils.assert_buf(key, 'key needs to be buffer');
   utils.assert_buf(iv, 'iv needs to be buffer');
@@ -135,4 +135,12 @@ module.exports.decrypt = (data, key, iv) => {
     encrypted.push(cipher.final());
     resolve(Buffer.concat(encrypted));
   });
+}
+
+export default {
+  nameKeySizeHash,
+  mergeKeyIv,
+  unmergeKeyIv,
+  encrypt,
+  decrypt
 }

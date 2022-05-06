@@ -1,6 +1,6 @@
 import CFile from './file.js';
 import CApi from './api.js';
-import CryptoLib from './crypto/index.cjs';
+import CryptoLib from './crypto/index.js';
 import CSha256 from './sha256.js';
 import {
   basename,

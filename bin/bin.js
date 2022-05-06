@@ -11,18 +11,12 @@ import {
 const {
   formatSize
 } = Utils;
-/*
-program
-  .option('-u')
-  .option('--file <char>')
-  .option('-s, --separator <char>');*/
 
 program
   .command('upload')
   .option('--file <char>')
   .option('--rate-limit <number>')
   .option('-p, --progress').action(async(args, options) => {
-    //console.log("STR=", args)
     const Upload = new CUpload;
     Upload.setProgress(args.progress);
     Upload.on('finish', (link) => {
@@ -33,6 +27,6 @@ program
     }
     await Upload.init(args.file);
     await Upload.upload(true);
-  });;
+  });
 
 program.parse();

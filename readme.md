@@ -18,15 +18,14 @@ console.log(Utils.getParts(URL));
 ```javascript
 import {CApi} from 'filebit-node';
 const Api = new CApi();
-const ServerResponse = Api.Call('storage/server.json');
+const ServerResponse = await Api.Call('storage/server.json');
 console.log(ServerResponse);
 ```
 
 ## File Upload
 ```javascript
 import {
-  CUpload,
-  Utils
+  CUpload
 } from 'filebit-node';
 
 const File2Upload = 'test.txt';

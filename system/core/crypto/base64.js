@@ -13,7 +13,7 @@ const encode_url = (str) => {
  * @param {Buffer} buf - buffer to be encoded
  * @return String - the base64 representation of the buffer
  **/
-module.exports.encode = (buf) => {
+export const encode = (buf) => {
   return encode_url(buf.toString('base64'));
 };
 
@@ -29,6 +29,11 @@ const decode_url = (str) => {
  * @param {String} str - base64 String to be decoded
  * @return Buffer - the decoded result as a Buffer
  **/
-module.exports.decode = (str) => {
+export const decode = (str) => {
   return Buffer.from(decode_url(str), 'base64');
 };
+
+export default {
+  encode,
+  decode
+}
