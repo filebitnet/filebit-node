@@ -1,0 +1,4 @@
+_test*
+package-lock.json
+test.txt
+node_modules/
