@@ -1,3 +1,5 @@
+![](img/shell.gif)
+
 ## Check Filebit URL & Get Parts
 ```javascript
 import {Utils} from 'filebit-node';
