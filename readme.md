@@ -1,4 +1,26 @@
-![](img/shell.gif)
+## Check Filebit URL & Get Parts
+```javascript
+import {Utils} from 'filebit-node';
+const URL = 'https://filebit.net/f/qknI9LX#Ac1A3HJ13aBRn66XHnkktQNlOK1dxItiRqnkAovV82uU';
+
+console.log(Utils.isValidURL(URL)); // => true
+console.log(Utils.getParts(URL));
+/*
+{
+  id: 'qknI9LX',
+  hash: 'Ac1A3HJ13aBRn66XHnkktQNlOK1dxItiRqnkAovV82uU',
+  admincode: false
+}
+*/
+```
+
+## Get Upload Server
+```javascript
+import {CApi} from 'filebit-node';
+const Api = new CApi();
+const ServerResponse = Api.Call('storage/server.json');
+console.log(ServerResponse);
+```
 
 ## File Upload
 ```javascript
