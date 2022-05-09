@@ -42,13 +42,38 @@ Upload.upload(true);
 ```
 
 ## CLI Usage
-> the library needs to be linked
+the library needs to be linked
 ### Upload
+```bash
+bash-3.2$ filebit-node upload --help
+Usage: filebit-node upload [options]
+
+Options:
+  --file <char>
+  --rate-limit <number>
+  --tpl <string>         output template ex: --tpl='{"link":"%s"}'
+  -p, --progress
+  -h, --help             display help for command
+```
+> Example
 ```bash
 filebit-node upload --file ./100MB.bin --tpl='{"link":"%s"}' -p
 ```
 
+
 ### Download
+```bash
+bash-3.2$ filebit-node download --help
+Usage: filebit-node download [options]
+
+Options:
+  --url <string>
+  --path <string>
+  --tpl <string>   output template ex: --tpl='{"link":"%s"}'
+  -p, --progress
+  -h, --help       display help for command
+```
+> Example
 ```bash
 filebit-node download --url='https://filebit.net/f/...#...' --path='./downloaded.bin' -p --tpl='{"path":"%s"}'
 ```
