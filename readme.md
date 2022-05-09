@@ -41,6 +41,27 @@ await Upload.init(File2Upload);
 Upload.upload(true);
 ```
 
+## File Download
+```javascript
+import {
+  CDownload,
+  Utils
+} from 'filebit-node';
+const {
+  getParts
+} = Utils;
+
+const URL = 'https://filebit.net/f/...#...';
+const URLParts = getParts(URL);
+const Download = new CDownload(URLParts.id, URLParts.hash);
+Download.on('finish', (path) => {
+  console.log(path)
+});
+await Download.setStoragePath('./test.txt');
+Download.setProgress(true);
+await Download.download();
+```
+
 ## CLI Usage
 the library needs to be linked
 ### Upload
