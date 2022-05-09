@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+process.removeAllListeners('warning')
 import {
   program
 } from 'commander';
@@ -14,18 +15,26 @@ const {
 
 program
   .command('upload')
-  .option('--file <char>')
+  .requiredOption('--file <char>')
   .option('--rate-limit <number>')
+  .option('--tpl <string>', 'output template ex: --tpl=\'{"link":"%s"}\'')
   .option('-p, --progress').action(async(args, options) => {
     const Upload = new CUpload;
-    Upload.setProgress(args.progress);
     Upload.on('finish', (link) => {
-      console.log("Link:", link)
+      if ('tpl' in args) {
+        const tpl = String(args.tpl).replace('%s', link);
+        console.log(tpl);
+        return;
+      }
+      console.log(link)
     });
+    if (args.progress) {
+      Upload.setProgress(args.progress);
+    }
+    await Upload.init(args.file);
     if ('rateLimit' in args && Number(args.rateLimit) > 0) {
       Upload.setRateLimit(Number(args.rateLimit));
     }
-    await Upload.init(args.file);
     await Upload.upload(true);
   });
 

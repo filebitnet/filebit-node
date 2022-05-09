@@ -41,7 +41,9 @@ export default class CUpload extends EventEmitter {
     this._upload_completed = false;
     this._fileid = null;
     this._uploaded = 0;
-    this._progress = false;
+    if (typeof(this._isProgressSet) === undefined) {
+      this._progress = false;
+    }
     this._progressFnSet = false;
     this._progressFn = () => {};
     this._AbortController = new AbortController();
@@ -83,6 +85,7 @@ export default class CUpload extends EventEmitter {
 
   setProgress(state) {
     this._progress = state;
+    this._isProgressSet = true;
   }
 
   setRateLimit(kbps) {
@@ -99,6 +102,9 @@ export default class CUpload extends EventEmitter {
   }
 
   progressBar(ident, done, total, text = 'Progress') {
+    /*if (!this._progress) {
+      return;
+    }*/
     if (this._progressFnSet) {
       return this._progressFn(...arguments);
     }
@@ -185,11 +191,10 @@ export default class CUpload extends EventEmitter {
   }
 
   __progress(download_size, downloaded, upload_size, uploaded) {
-    /*if (!this._progress) {
+    if (!this._progress) {
       return;
-    }*/
+    }
     const bytesNow = (uploaded - this._lastSize);
-    //console.log("bytesNow = %o", bytesNow)
     if (bytesNow > 0) {
       this._uploaded += Number(bytesNow);
       this.progressBar('progress', this._uploaded, this._filesize);
@@ -233,7 +238,6 @@ export default class CUpload extends EventEmitter {
     if (this.isAborted()) {
       this.__destruct();
       this._progressMap['progress'].fail('upload aborted');
-      console.log(this._slices)
     } else {
       if (this._progress) {
         this._progressMap['progress'].succeed('upload completed');

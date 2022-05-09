@@ -32,7 +32,7 @@ export const upload = async({
   let bytesUploaded = 0;
 
   const blobReader = blob.stream().getReader();
-
+  let lastByteWritten = 0;
 
   const progressTrackingStream = new ReadableStream({
     async pull(controller) {
@@ -56,7 +56,6 @@ export const upload = async({
         let offset = 0;
         let chunk = result.value;
 
-
         while (offset < chunk.length) {
           if (true) {
             //console.log("chunksize is", this.getRate())
@@ -77,17 +76,17 @@ export const upload = async({
             offset += _chunk.length;
             //this._bytesRead += _chunk.length;
             //console.log("sleeping 1 sek");
+
+            let waiting = Math.floor(999 / kbps * _chunk.length);
+
             if (kbps > 0) {
-              await sleep(999);
+              await sleep(waiting);
             }
           } else {
             if (_DEBUG) console.log("paused is called")
             await sleep(40);
           }
         }
-
-
-
       }
     },
   });
@@ -114,6 +113,7 @@ export const upload = async({
     }
     return false;
   } catch (e) {
+    return false;
     //console.log("Exception : ", e)
   }
 }
