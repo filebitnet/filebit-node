@@ -3,6 +3,7 @@ import CApi from './system/core/api.js';
 import CFile from './system/core/file.js';
 import CSha256 from './system/core/sha256.js';
 import CUpload from './system/core/upload.js';
+import CDownload from './system/core/download.js';
 import CryptoLib from './system/core/crypto/index.js';
 import Utils from './system/core/utils.js';
 
@@ -11,6 +12,7 @@ export {
   CFile,
   CSha256,
   CUpload,
+  CDownload,
   CryptoLib,
   Utils
 }

@@ -1,6 +1,9 @@
 import {
   upload
 } from './api_upload.js';
+import {
+  DownloadProgress
+} from './api_download.js';
 
 export default class CApi {
   constructor() {
@@ -40,6 +43,21 @@ export default class CApi {
 
   async download(downloadId, slotId, parent) {
     const url = this._endpoint + 'download/' + downloadId + '?slot=' + slotId;
+
+    const response = await fetch(url, {
+      method: 'get',
+      headers: {
+        'User-Agent': this._ua
+      }
+    }).then(DownloadProgress({
+      onProgress: (loaded, size) => {
+        try {
+          parent.__progress.bind(parent)(size, loaded, 0, 0);
+        } catch (e) {}
+      }
+    }));
+    const data = await response.arrayBuffer();
+    return Buffer.from(data);
   }
 
   async upload(server, upload_id, chunk_id, offset, buffer, kbps = 0, parent) {

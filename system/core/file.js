@@ -50,8 +50,9 @@ export default class CFile {
 
   write(start, buf) {
     return new Promise(resolve => {
+      //console.log("fs.write(%o, (len:%o));", start, buf.byteLength)
       //fs.write(fd, buffer[, offset[, length[, position]]], callback)#
-      write(this._handle, buf, start, start + (buf.byteLength), function(err) {
+      write(this._handle, buf, 0, (buf.byteLength), start, function(err) {
         if (err) {
           console.log(err)
         }

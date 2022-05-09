@@ -72,11 +72,18 @@ export const getSliceOffset = (fileSize) => {
   return chunklist;
 }
 
+export const sleep = (msec) => {
+  return new Promise(resolve => {
+    setTimeout(resolve, msec)
+  })
+}
+
 export default {
   formatSize,
   getRegex,
   isValidURL,
   getParts,
   basename,
-  getSliceOffset
+  getSliceOffset,
+  sleep
 }

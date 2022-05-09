@@ -5,7 +5,8 @@ import CSha256 from './sha256.js';
 import {
   basename,
   formatSize,
-  getSliceOffset
+  getSliceOffset,
+  sleep
 } from './utils.js';
 import ora from 'ora';
 import {
@@ -101,7 +102,7 @@ export default class CUpload extends EventEmitter {
     this._handle.close();
   }
 
-  progressBar(ident, done, total, text = 'Progress') {
+  _progressBar(ident, done, total, text = 'Progress') {
     /*if (!this._progress) {
       return;
     }*/
@@ -111,12 +112,13 @@ export default class CUpload extends EventEmitter {
     const perc = Math.min(100, Number((done / total) * 100).toFixed(2));
     const left = 100 - perc;
     if (!(ident in this._progressMap)) {
-      this._progressMap[ident] = ora('Loading unicorns').start();
+      this._progressMap[ident] = ora('.').start();
     }
     //spinner.text = 'Loading rainbows (' + i + ' %)';
     this._progressMap[ident].text = text + ' ' + perc + '%';
     if (perc == 100) {
       this._progressMap[ident].succeed(text + ' 100%');
+      this._progressMap[ident].isSilent = true;
     }
   }
 
@@ -136,7 +138,7 @@ export default class CUpload extends EventEmitter {
       const Sha256Instance = new CSha256;
       const hash = await Sha256Instance.packFile(this._path, (percent) => {
         if (this._progress) {
-          this.progressBar('hash', percent, 100, 'Calculating Hash');
+          this._progressBar('hash', percent, 100, 'Calculating Hash');
         }
       });
       resolve(hash);
@@ -197,7 +199,7 @@ export default class CUpload extends EventEmitter {
     const bytesNow = (uploaded - this._lastSize);
     if (bytesNow > 0) {
       this._uploaded += Number(bytesNow);
-      this.progressBar('progress', this._uploaded, this._filesize);
+      this._progressBar('progress', this._uploaded, this._filesize);
       this._lastSize = uploaded;
     }
     return 0;
@@ -206,7 +208,7 @@ export default class CUpload extends EventEmitter {
   async upload() {
     let len = 0;
     if (this._progress) {
-      this.progressBar('progress', 0, this._filesize);
+      this._progressBar('progress', 0, this._filesize);
     }
     let offset;
     while (this._slices.length > 0 && (offset = this._slices.shift()) && !this.isAborted() && !this.isPaused()) {
@@ -228,7 +230,7 @@ export default class CUpload extends EventEmitter {
         }
         this._crcMap[chunk_id] = response.crc32;
         if (this._progress) {
-          this.progressBar('progress', len, this._filesize);
+          this._progressBar('progress', len, this._filesize);
         }
       }
     }

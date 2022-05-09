@@ -129,11 +129,15 @@ export const decrypt = (data, key, iv) => {
   utils.assert_buf(iv, 'iv needs to be buffer');
 
   return new Promise(resolve => {
-    let d = data.slice();
-    const cipher = createDecipheriv('aes-128-cbc', key, iv);
-    let encrypted = [cipher.update(d)];
-    encrypted.push(cipher.final());
-    resolve(Buffer.concat(encrypted));
+    try {
+      let d = data.slice();
+      const cipher = createDecipheriv('aes-128-cbc', key, iv);
+      let encrypted = [cipher.update(d)];
+      encrypted.push(cipher.final());
+      resolve(Buffer.concat(encrypted));
+    } catch (e) {
+      resolve(false);
+    }
   });
 }
 

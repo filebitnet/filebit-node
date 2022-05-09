@@ -3,3 +3,4 @@ package-lock.json
 test.txt
 node_modules/
 .DS_Store
+test/*

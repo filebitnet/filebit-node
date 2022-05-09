@@ -40,3 +40,15 @@ Upload.on('finish', (link) => {
 await Upload.init(File2Upload);
 Upload.upload(true);
 ```
+
+## CLI Usage
+> the library needs to be linked
+### Upload
+```bash
+filebit-node upload --file ./100MB.bin --tpl='{"link":"%s"}' -p
+```
+
+### Download
+```bash
+filebit-node download --url='https://filebit.net/f/...#...' --path='./downloaded.bin' -p --tpl='{"path":"%s"}'
+```
