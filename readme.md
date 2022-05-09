@@ -49,7 +49,7 @@ bash-3.2$ filebit-node upload --help
 Usage: filebit-node upload [options]
 
 Options:
-  --file <char>
+  --file <string>
   --rate-limit <number>
   --tpl <string>         output template ex: --tpl='{"link":"%s"}'
   -p, --progress

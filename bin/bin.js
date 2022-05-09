@@ -18,7 +18,7 @@ const {
 
 program
   .command('upload')
-  .requiredOption('--file <char>')
+  .requiredOption('--file <string>')
   .option('--rate-limit <number>')
   .option('--tpl <string>', 'output template ex: --tpl=\'{"link":"%s"}\'')
   .option('-p, --progress').action(async(args, options) => {
