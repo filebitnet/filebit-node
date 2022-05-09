@@ -139,3 +139,16 @@ Options:
 ```bash
 filebit-node download --url='https://filebit.net/f/...#...' --path='./downloaded.bin' -p --tpl='{"path":"%s"}'
 ```
+
+## Fetch error message
+```bash
+(node:51976) ExperimentalWarning: The Fetch API is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+```
+You can start node with the parameter `--no-experimental-fetch` we then use `undici` as polyfill library
+which in the end is the library which node uses under the hood, so all features are expected to work properly.
+You can also simply suppress the warning which we do in our bin/bin.js file.
+```javascript
+process.removeAllListeners('warning')
+```
+just add this line to the beginning of your file.
