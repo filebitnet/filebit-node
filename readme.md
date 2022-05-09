@@ -24,6 +24,47 @@ const ServerResponse = await Api.Call('storage/server.json');
 console.log(ServerResponse);
 ```
 
+## Get File Informations
+```javascript
+import {CApi, CryptoLib, Utils} from 'filebit-node';
+const {formatSize} = Utils;
+
+const Api = new CApi;
+const Crypto = CryptoLib.crypto;
+const Response = await Api.Call('storage/bucket/info.json',{"file":"teBKKQ6"});
+const EncryptedName = Response.filename;
+
+const Key = 'Abts8F6i70LmwgoeUrDe_8RWMmuXBtQj5C_BguRzJL-p';
+const DecryptedKey = Crypto.unmergeKeyIv(CryptoLib.base64.decode(Key));
+const DecryptedName = await Crypto.decrypt(CryptoLib.base64.decode(EncryptedName), DecryptedKey.kev, DecryptedKey.iv);
+
+console.log('%o Filesize: %o', DecryptedName, formatSize(Response.filesize));
+```
+
+## Multi File Information(s)
+```javascript
+import {CApi, CryptoLib, Utils} from 'filebit-node';
+const {formatSize} = Utils;
+
+const Api = new CApi;
+const Crypto = CryptoLib.crypto;
+
+const FilesArray = {
+  'tlBKQQ6' : 'Abts8F6i70LmwgoeUrDe_1RWMmuXBtQj5C_BguRzJL-p',
+  'AfAiPEM' : 'AbotIF8zJdU44b6cF_9f9kXIir_U5AmODfRiWE9xDo2U',
+};
+
+const Response = await Api.Call('storage/multiinfo.json', {"files":Object.keys(FilesArray)});
+
+for(const id of Object.keys(Response)) {
+  const data = Response[id];
+  const Key = FilesArray[id];
+  const DecryptedKey = Crypto.unmergeKeyIv(CryptoLib.base64.decode(Key));
+  const DecryptedName = await Crypto.decrypt(CryptoLib.base64.decode(data.name), DecryptedKey.kev, DecryptedKey.iv);
+  console.log('[%o] %o Filesize: %o', data.state, DecryptedName, formatSize(data.size));
+}
+```
+
 ## File Upload
 ```javascript
 import {
