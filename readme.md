@@ -140,6 +140,14 @@ Options:
 filebit-node download --url='https://filebit.net/f/...#...' --path='./downloaded.bin' -p --tpl='{"path":"%s"}'
 ```
 
+## CommonJS Usage
+You will need to import the module instead of "require" it, todo so, simply use the `import` statement.
+>Dynamic import() is supported in both CommonJS and ES modules. In CommonJS modules it can be used to load ES modules.
+click [here](https://nodejs.org/api/esm.html#import-expressions) for more informations.
+```javascript
+const fbNode = await import('filebit-node');
+````
+
 ## Fetch error message
 ```bash
 (node:51976) ExperimentalWarning: The Fetch API is an experimental feature. This feature could change at any time

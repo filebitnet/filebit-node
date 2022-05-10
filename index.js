@@ -4,6 +4,7 @@ import CFile from './system/core/file.js';
 import CSha256 from './system/core/sha256.js';
 import CUpload from './system/core/upload.js';
 import CDownload from './system/core/download.js';
+import CSpeedTicket from './system/core/speedticket.js';
 import CryptoLib from './system/core/crypto/index.js';
 import Utils from './system/core/utils.js';
 
@@ -14,5 +15,6 @@ export {
   CUpload,
   CDownload,
   CryptoLib,
+  CSpeedTicket,
   Utils
 }
