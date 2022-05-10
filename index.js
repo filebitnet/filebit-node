@@ -1,3 +1,4 @@
+"use module";
 import './polyfills.js';
 import CApi from './system/core/api.js';
 import CFile from './system/core/file.js';

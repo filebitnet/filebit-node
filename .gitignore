@@ -4,3 +4,6 @@ test.txt
 node_modules/
 .DS_Store
 test/*
+bundle.js
+bundle.cjs
+rollup.config.js
