@@ -16,6 +16,13 @@ import {
 export default class CUpload extends EventEmitter {
   constructor() {
     super();
+    this._progressFnSet = false;
+    this._progressFn = () => {};
+    this._progress = false;
+    this._crcMap = {};
+    this._upload_completed = false;
+    this._fileid = null;
+    this._uploaded = 0;
   }
 
   async init(path, filename = false) {
@@ -38,15 +45,8 @@ export default class CUpload extends EventEmitter {
     this._upload_id = await this._genUploadId();
     this._slices = getSliceOffset(this._filesize);
     this._servers = await this._getUploadServers();
-    this._crcMap = {};
-    this._upload_completed = false;
-    this._fileid = null;
-    this._uploaded = 0;
-    if (typeof(this._isProgressSet) === undefined) {
-      this._progress = false;
-    }
-    this._progressFnSet = false;
-    this._progressFn = () => {};
+
+
     this._AbortController = new AbortController();
     this._AbortController.onabort = () => {
       // cleanups here
@@ -95,6 +95,7 @@ export default class CUpload extends EventEmitter {
   }
 
   setProgressFn(fn) {
+    this._isProgressFnSet = true;
     this._progressFn = fn;
     this._progressFnSet = true;
   }
