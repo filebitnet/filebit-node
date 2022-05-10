@@ -241,9 +241,11 @@ export default class CUpload extends EventEmitter {
     }
     if (this.isAborted()) {
       this.__destruct();
-      this._progressMap['progress'].fail('upload aborted');
+      if (this._progress && 'progress' in this._progressMap) {
+        this._progressMap['progress'].fail('upload aborted');
+      }
     } else {
-      if (this._progress) {
+      if (this._progress && 'progress' in this._progressMap) {
         this._progressMap['progress'].succeed('upload completed');
       }
       const Server = this._pickServer();
