@@ -1,4 +1,4 @@
-import './fetch-polyfill.js';
+import './polyfills.js';
 import CApi from './system/core/api.js';
 import CFile from './system/core/file.js';
 import CSha256 from './system/core/sha256.js';

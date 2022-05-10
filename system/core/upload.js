@@ -50,6 +50,7 @@ export default class CUpload extends EventEmitter {
     this._AbortController = new AbortController();
     this._AbortController.onabort = () => {
       // cleanups here
+      this.__destruct();
     };
     this._signal = this._AbortController.signal;
     this._paused = false;

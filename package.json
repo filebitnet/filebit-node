@@ -1,6 +1,6 @@
 {
   "name": "filebit-node",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -15,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "commander": "^9.2.0",
+    "fetch-blob": "^3.1.5",
     "form-data": "^4.0.0",
     "native-fetch": "^4.0.2",
     "node-fetch": "^3.2.4",
