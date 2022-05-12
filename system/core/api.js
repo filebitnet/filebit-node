@@ -6,10 +6,10 @@ import {
 } from './api_download.js';
 
 export default class CApi {
-  constructor() {
-    this._endpoint = 'https://filebit.net/';
-    this._fqdn = 'https://filebit.net/';
-    this._ssl = true;
+  constructor(isDev = false) {
+    this._endpoint = (isDev) ? 'http://localhost/' : 'https://filebit.net/';
+    this._fqdn = (isDev) ? 'http://localhost/' : 'https://filebit.net/';
+    this._ssl = !isDev;
     this._ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36';
     this._yBid = '9d1fe3c182ca598f440d06787b9d479e3eaa6d2d';
   }
