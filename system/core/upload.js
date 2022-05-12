@@ -28,9 +28,9 @@ export default class CUpload extends EventEmitter {
     this._handle = new CFile;
     this._crypto = CryptoLib.crypto;
     this._api = new CApi;
+    this._keygen = CryptoLib.keygen;
     this._key = this._keygen();
     this._iv = this._keygen();
-    this._keygen = CryptoLib.keygen;
 
     this._AbortController = new AbortController();
     this._AbortController.onabort = () => {
