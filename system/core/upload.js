@@ -25,7 +25,7 @@ export default class CUpload extends EventEmitter {
     this._uploaded = 0;
   }
 
-  async init(path, filename = false) {
+  async init(path, filename = false, hash = false) {
     this._path = path;
     this._handle = new CFile;
     this._handle.open(path);
@@ -41,7 +41,7 @@ export default class CUpload extends EventEmitter {
     this._nksh = await this._crypto.nameKeySizeHash(this._filenameRaw, this._filesize, this._key);
 
     this._progressMap = {};
-    this._hash = await this._makeHash();
+    this._hash = (hash && String(hash).length === 64) ? hash : await this._makeHash();
     this._upload_id = await this._genUploadId();
     this._slices = getSliceOffset(this._filesize);
     this._servers = await this._getUploadServers();
