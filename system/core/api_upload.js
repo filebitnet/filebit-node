@@ -11,7 +11,7 @@ const sleep = (msec) => {
     setTimeout(resolve, msec)
   })
 }
-const _DEBUG = true;
+const _DEBUG = false;
 export const upload = async({
   url,
   buffer,

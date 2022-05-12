@@ -11,18 +11,18 @@ export default class CApi {
     this._fqdn = 'https://filebit.net/';
     this._ssl = true;
     this._ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3831.6 Safari/537.36';
-    this._y_bid = '9d1fe3c182ca598f440d06787b9d479e3eaa6d2d';
+    this._yBid = '9d1fe3c182ca598f440d06787b9d479e3eaa6d2d';
   }
 
   setYBid(y_bid) {
-    this._y_bid = y_bid;
+    this._yBid = y_bid;
   }
 
   _appendYBid(url) {
     if (url.indexOf('?') > -1) {
-      url += '&y_bid=' + this._y_bid;
+      url += '&y_bid=' + this._yBid;
     } else {
-      url += '?y_bid=' + this._y_bid;
+      url += '?y_bid=' + this._yBid;
     }
     return url;
   }

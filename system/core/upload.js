@@ -20,32 +20,17 @@ export default class CUpload extends EventEmitter {
     this._progressFn = () => {};
     this._progress = false;
     this._crcMap = {};
-    this._upload_completed = false;
+    this._uploadCompleted = false;
     this._fileid = null;
     this._uploaded = 0;
-  }
-
-  async init(path, filename = false, hash = false) {
-    this._path = path;
+    this._errorcount = 0;
+    this._errorcountMax = 10;
     this._handle = new CFile;
-    this._handle.open(path);
     this._crypto = CryptoLib.crypto;
-    this._keygen = CryptoLib.keygen;
     this._api = new CApi;
     this._key = this._keygen();
     this._iv = this._keygen();
-    this._filenameRaw = (!filename) ? basename(path) : filename;
-    this._filename = await this._makeFileName(path, filename);
-    this._filesize = Number(this._handle.size());
-    this._filesizeFormatted = formatSize(this._filesize);
-    this._nksh = await this._crypto.nameKeySizeHash(this._filenameRaw, this._filesize, this._key);
-
-    this._progressMap = {};
-    this._hash = (hash && String(hash).length === 64) ? hash : await this._makeHash();
-    this._upload_id = await this._genUploadId();
-    this._slices = getSliceOffset(this._filesize);
-    this._servers = await this._getUploadServers();
-
+    this._keygen = CryptoLib.keygen;
 
     this._AbortController = new AbortController();
     this._AbortController.onabort = () => {
@@ -54,6 +39,39 @@ export default class CUpload extends EventEmitter {
     };
     this._signal = this._AbortController.signal;
     this._paused = false;
+    this._progressMap = {};
+  }
+
+  async init(path, filename = false, hash = false) {
+    this._path = path;
+    this._handle.open(path);
+    this._filenameRaw = (!filename) ? basename(path) : filename;
+    this._filename = await this._makeFileName(path, filename);
+    this._filesize = Number(this._handle.size());
+    this._filesizeFormatted = formatSize(this._filesize);
+    this._nksh = await this._crypto.nameKeySizeHash(this._filenameRaw, this._filesize, this._key);
+    this._hash = (hash && String(hash).length === 64) ? hash : await this._makeHash();
+    this._uploadID = await this._genUploadId();
+    this._slices = getSliceOffset(this._filesize);
+    this._servers = await this._getUploadServers(this._filesize);
+  }
+
+  setMaxErrorCount(count) {
+    this._errorcountMax = Number(count);
+  }
+
+  _isErrorMaxReached() {
+    return this._errorcount >= this._errorcountMax;
+  }
+
+  _throwErrorAndAbort(error) {
+    this.emit('error', error);
+    this.getAbortController().abort();
+    return false;
+  }
+
+  _reportBadServer(Server) {
+    this.emit('badserver', Server);
   }
 
   _getSignal() {
@@ -87,7 +105,6 @@ export default class CUpload extends EventEmitter {
 
   setProgress(state) {
     this._progress = state;
-    this._isProgressSet = true;
   }
 
   setRateLimit(kbps) {
@@ -130,8 +147,13 @@ export default class CUpload extends EventEmitter {
     })[0];
   }
 
-  async _getUploadServers() {
-    const ServerResponse = await this._api.Call('storage/server.json');
+  async _getUploadServers(filesize) {
+    const ServerResponse = await this._api.Call('storage/server.json', {
+      filesize
+    });
+    if (!('checkin' in ServerResponse)) {
+      return this._throwErrorAndAbort('could not get upload server');
+    }
     return ServerResponse.checkin;
   }
 
@@ -162,7 +184,7 @@ export default class CUpload extends EventEmitter {
 
     const Response = await this._api.Call('storage/bucket/create.json', Request);
     if (!Response.id) {
-      throw new Error('could not create upload id');
+      return this._throwErrorAndAbort('could not create upload id');
     }
     return Response.id;
   }
@@ -182,15 +204,16 @@ export default class CUpload extends EventEmitter {
       'chunks': sorted.length
     };
     const Response = await this._api.Call('storage/bucket/finalize.json', Request);
+    //@TODO, check if error is recoverable, and re-call the finalize api some more times.
     if (Response.error) {
-      throw new Error(Response.error);
+      return this._throwErrorAndAbort(Response.error);
     }
     const id = Response.id;
     const hash = CryptoLib.base64.encode(this._crypto.mergeKeyIv(this._key, this._iv));
     this._fileid = id;
     this._hash = hash;
     this._admincode = Response.admincode;
-    this._upload_completed = true;
+    this._uploadCompleted = true;
     return true;
   }
 
@@ -214,6 +237,10 @@ export default class CUpload extends EventEmitter {
     }
     let offset;
     while (this._slices.length > 0 && (offset = this._slices.shift()) && !this.isAborted() && !this.isPaused()) {
+      if (this._isErrorMaxReached()) {
+        this._throwErrorAndAbort('max error count reached');
+        break;
+      }
       if (!this.isAborted()) {
         const Server = this._pickServer();
         this._lastSize = 0;
@@ -221,22 +248,30 @@ export default class CUpload extends EventEmitter {
         const buffer = await this._handle.read(offset[1], offset[2]);
         const SizeRequired = (offset[2] - offset[1]);
         if (buffer.byteLength !== SizeRequired) {
-          throw new Error('invalid filesize read...');
+          this._throwErrorAndAbort('filesize does not match buffer size');
+          break;
         }
         const encrypted = await this._crypto.encrypt(buffer, this._key, this._iv);
         len += encrypted.byteLength;
-        const response = await this._api.upload(Server, this._upload_id, chunk_id, offset, encrypted, this._ratelimit, this);
+        const response = await this._api.upload(Server, this._uploadID, chunk_id, offset, encrypted, this._ratelimit, this);
+        if (!response) {
+          this._errorcount++;
+          this._reportBadServer(Server);
+          this._slices.push(offset);
+          continue;
+        }
         if (this.isAborted()) {
           this._slices.push(offset);
           continue;
         }
+        //@TODO, calculate crc32 and compare with server response...
         this._crcMap[chunk_id] = response.crc32;
         if (this._progress) {
           this._progressBar('progress', len, this._filesize);
         }
       }
     }
-    if (this.isPaused()) {
+    if (this._isErrorMaxReached() || this.isPaused()) {
       return;
     }
     if (this.isAborted()) {
@@ -249,7 +284,7 @@ export default class CUpload extends EventEmitter {
         this._progressMap['progress'].succeed('upload completed');
       }
       const Server = this._pickServer();
-      await this._storeUploadRequest(Server, this._upload_id);
+      await this._storeUploadRequest(Server, this._uploadID);
       this.emit('finish', this.getLink());
       this.__destruct();
     }
@@ -259,7 +294,7 @@ export default class CUpload extends EventEmitter {
     if (this.isAborted() || this.isPaused()) {
       return false;
     }
-    if (!this._upload_completed) {
+    if (!this._uploadCompleted) {
       throw new Error('upload not yet finished');
     }
     return this._api.getURL() + 'f/' + this._fileid + '#' + this._hash;
@@ -269,7 +304,7 @@ export default class CUpload extends EventEmitter {
     if (this.isAborted() || this.isPaused()) {
       return false;
     }
-    if (!this._upload_completed) {
+    if (!this._uploadCompleted) {
       throw new Error('upload not yet finished');
     }
     return this._admincode;
