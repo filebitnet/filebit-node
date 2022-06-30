@@ -16,6 +16,20 @@ console.log(Utils.getParts(URL));
 */
 ```
 
+## Using the Bitsync file format
+existing files will be appended, the password needs to match the existing file
+```javascript
+import {CBitFile} from 'filebit-node';
+
+const BitFile = new CBitFile('MY_SUPER_SECRET_PASSWORD');
+await BitFile.setPathAndFilename('./', '_filename_');
+BitFile.setType(1);
+
+BitFile.addLine("Hello", "World");
+BitFile.addLine("Hello 2", "World 2");
+BitFile.write();
+```
+
 ## Get Upload Server
 ```javascript
 import {CApi} from 'filebit-node';
@@ -113,6 +127,8 @@ Usage: filebit-node upload [options]
 Options:
   --file <string>
   --rate-limit <number>
+  --bitfile-file <string>
+  --bitfile-password <string>
   --tpl <string>         output template ex: --tpl='{"link":"%s"}'
   -p, --progress
   -h, --help             display help for command

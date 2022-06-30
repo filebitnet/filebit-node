@@ -50,7 +50,8 @@ export default class CUpload extends EventEmitter {
     this._filesize = Number(this._handle.size());
     this._filesizeFormatted = formatSize(this._filesize);
     this._nksh = await this._crypto.nameKeySizeHash(this._filenameRaw, this._filesize, this._key);
-    this._hash = (hash && String(hash).length === 64) ? hash : await this._makeHash();
+    this._hash = null;
+    this._sha256 = (hash && String(hash).length === 64) ? hash : await this._makeHash();
     this._uploadID = await this._genUploadId();
     this._slices = getSliceOffset(this._filesize);
     this._servers = await this._getUploadServers(this._filesize);
@@ -164,7 +165,7 @@ export default class CUpload extends EventEmitter {
         if (this._progress) {
           this._progressBar('hash', percent, 100, 'Calculating Hash');
         }
-      });
+      }, 'sha256', this._getSignal()); // pass signal so we can also abort the hash calculation of large files
       resolve(hash);
     })
   }
@@ -178,7 +179,7 @@ export default class CUpload extends EventEmitter {
     const Request = {
       'name': this._filename,
       'size': this._filesize,
-      'sha256': this._hash,
+      'sha256': this._sha256,
       'nksh': this._nksh
     };
 
@@ -298,6 +299,18 @@ export default class CUpload extends EventEmitter {
       throw new Error('upload not yet finished');
     }
     return this._api.getURL() + 'f/' + this._fileid + '#' + this._hash;
+  }
+
+  getFileId() {
+    return this._fileid;
+  }
+
+  getHash() {
+    return this._hash;
+  }
+
+  getSha256() {
+    return this._sha256;
   }
 
   getAdminCode() {

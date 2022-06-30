@@ -10,8 +10,9 @@ export default class CSha256 {
   pack(data) {
     return createHash('sha256').update(String(data)).digest('hex');
   }
-  packFile(filepath, progress = () => {}, algorithm = 'sha256') {
+  packFile(filepath, progress = () => {}, algorithm = 'sha256', AbortSignal = null) {
     return new Promise((resolve, reject) => {
+      let isAborted = false;
       const stat = statSync(filepath);
       if (!stat) {
         return reject("invalid path");
@@ -27,12 +28,20 @@ export default class CSha256 {
       try {
         let s = ReadStream(filepath)
         s.on('data', function(data) {
+          if (AbortSignal !== null && AbortSignal.aborted) {
+            s.destroy();
+            isAborted = true;
+            return resolve(-1);
+          }
           calculatedAlready += data.length;
           shasum.update(data);
           doProgress();
         });
         // making digest
         s.on('end', function() {
+          if (isAborted) {
+            return false;
+          }
           const hash = shasum.digest('hex')
             //doProgress();
           return resolve(hash);

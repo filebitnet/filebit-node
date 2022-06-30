@@ -6,6 +6,7 @@ import {
 } from 'commander';
 
 import {
+  CBitFile,
   CUpload,
   CDownload,
   Utils
@@ -20,10 +21,21 @@ program
   .command('upload')
   .requiredOption('--file <string>')
   .option('--rate-limit <number>')
+  .option('--bitfile-file <string>')
+  .option('--bitfile-password <string>')
   .option('--tpl <string>', 'output template ex: --tpl=\'{"link":"%s"}\'')
   .option('-p, --progress').action(async(args, options) => {
+    const bfpw = ('bitfilePassword' in args) ? args.bitfilePassword : 'filebit';
+    const bffn = ('bitfileFile' in args) ? args.bitfileFile : 'database';
+
+    const BitFile = new CBitFile(bfpw);
+    await BitFile.setPathAndFilename('./', bffn);
+    BitFile.setType(1);
+
     const Upload = new CUpload;
     Upload.on('finish', (link) => {
+      BitFile.addLine(Upload.getFileId(), Upload.getHash(), Upload.getAdminCode());
+      BitFile.write();
       if ('tpl' in args) {
         const tpl = String(args.tpl).replace('%s', link);
         console.log(tpl);

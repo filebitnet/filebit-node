@@ -5,7 +5,8 @@ import {
   close,
   ReadStream,
   unlinkSync,
-  statSync
+  statSync,
+  existsSync
 } from 'node:fs';
 
 export default class CFile {
@@ -71,6 +72,10 @@ export default class CFile {
 
   close() {
     this._close();
+  }
+
+  exists() {
+    return existsSync(this._path);
   }
 
   size() {
