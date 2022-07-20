@@ -2,6 +2,8 @@ import CFile from './file.js';
 import CApi from './api.js';
 import CryptoLib from './crypto/index.js';
 import CSha256 from './sha256.js';
+import CParallel from './parallel.js';
+import CProgress from './progress.js';
 import {
   basename,
   formatSize,
@@ -40,6 +42,8 @@ export default class CUpload extends EventEmitter {
     this._signal = this._AbortController.signal;
     this._paused = false;
     this._progressMap = {};
+
+    this._parallel = 1;
   }
 
   async init(path, filename = false, hash = false) {
@@ -48,6 +52,7 @@ export default class CUpload extends EventEmitter {
     this._filenameRaw = (!filename) ? basename(path) : filename;
     this._filename = await this._makeFileName(path, filename);
     this._filesize = Number(this._handle.size());
+    this.__progress = new CProgress(this._filesize, this);
     this._filesizeFormatted = formatSize(this._filesize);
     this._nksh = await this._crypto.nameKeySizeHash(this._filenameRaw, this._filesize, this._key);
     this._hash = null;
@@ -55,6 +60,10 @@ export default class CUpload extends EventEmitter {
     this._uploadID = await this._genUploadId();
     this._slices = getSliceOffset(this._filesize);
     this._servers = await this._getUploadServers(this._filesize);
+  }
+
+  setParallel(parallel) {
+    this._parallel = Number(parallel);
   }
 
   setMaxErrorCount(count) {
@@ -144,7 +153,7 @@ export default class CUpload extends EventEmitter {
 
   _pickServer() {
     return this._servers.sort(() => {
-      return Math.random() * .5
+      return Math.random() - 0.5
     })[0];
   }
 
@@ -231,47 +240,68 @@ export default class CUpload extends EventEmitter {
     return 0;
   }
 
+
   async upload() {
-    let len = 0;
     if (this._progress) {
       this._progressBar('progress', 0, this._filesize);
     }
-    let offset;
-    while (this._slices.length > 0 && (offset = this._slices.shift()) && !this.isAborted() && !this.isPaused()) {
-      if (this._isErrorMaxReached()) {
-        this._throwErrorAndAbort('max error count reached');
-        break;
-      }
-      if (!this.isAborted()) {
-        const Server = this._pickServer();
-        this._lastSize = 0;
-        const chunk_id = offset[0];
-        const buffer = await this._handle.read(offset[1], offset[2]);
-        const SizeRequired = (offset[2] - offset[1]);
-        if (buffer.byteLength !== SizeRequired) {
-          this._throwErrorAndAbort('filesize does not match buffer size');
-          break;
+    const Parallel = new CParallel(this._parallel);
+    Parallel.setExecuterFn((offset) => {
+      return new Promise(async(resolve) => {
+        const Progress = this.__progress.progress(offset[0]);
+        if (this._isErrorMaxReached()) {
+          this._throwErrorAndAbort('max error count reached');
+          Parallel.stop();
+          this.__progress.reset(offset[0]);
+          return resolve();
         }
-        const encrypted = await this._crypto.encrypt(buffer, this._key, this._iv);
-        len += encrypted.byteLength;
-        const response = await this._api.upload(Server, this._uploadID, chunk_id, offset, encrypted, this._ratelimit, this);
-        if (!response) {
-          this._errorcount++;
-          this._reportBadServer(Server);
-          this._slices.push(offset);
-          continue;
+        let len = 0;
+        if (!this.isAborted()) {
+          const Server = this._pickServer();
+          const chunk_id = offset[0];
+          const buffer = await this._handle.read(offset[1], offset[2]);
+          const SizeRequired = (offset[2] - offset[1]);
+          //console.log("Buffer.byteLength", buffer.byteLength)
+          if (buffer.byteLength !== SizeRequired) {
+            this._throwErrorAndAbort('filesize does not match buffer size');
+            Parallel.stop();
+            this.__progress.reset(offset[0]);
+            return resolve();
+          }
+          const encrypted = await this._crypto.encrypt(buffer, this._key, this._iv);
+          len += encrypted.byteLength;
+          //console.log("Server: ", Server)
+          const response = await this._api.upload(Server, this._uploadID, chunk_id, offset, encrypted, this._ratelimit, this, Progress);
+          //console.log("Response: ", response);
+          if (!response) {
+            this._errorcount++;
+            this._reportBadServer(Server);
+            //this._slices.push(offset);
+            Parallel.push(offset);
+            this.__progress.reset(offset[0]);
+            return resolve();
+          }
+          if (this.isAborted()) {
+            Parallel.push(offset);
+            this.__progress.reset(offset[0]);
+            //this._slices.push(offset);
+            return resolve();
+          }
+          //@TODO, calculate crc32 and compare with server response...
+          this._crcMap[chunk_id] = response.crc32;
+          if (this._progress) {
+            Progress(len, len);
+            //this._progressBar('progress', len, this._filesize);
+          }
         }
-        if (this.isAborted()) {
-          this._slices.push(offset);
-          continue;
-        }
-        //@TODO, calculate crc32 and compare with server response...
-        this._crcMap[chunk_id] = response.crc32;
-        if (this._progress) {
-          this._progressBar('progress', len, this._filesize);
-        }
-      }
+        resolve()
+      });
+    });
+    for (const offset of this._slices) {
+      Parallel.push(offset);
     }
+
+    await Parallel.toPromise();
     if (this._isErrorMaxReached() || this.isPaused()) {
       return;
     }

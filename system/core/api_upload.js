@@ -50,7 +50,7 @@ export const upload = async({
           const percent = (bytesUploaded / totalBytes) * 100;
           //console.log("percent = %o", percent)
           //__progress(download_size, downloaded, upload_size, uploaded, percent)
-          progress(0, 0, totalBytes, bytesUploaded, percent);
+          progress(totalBytes, bytesUploaded, percent);
         }
       } else {
         let offset = 0;
@@ -68,7 +68,7 @@ export const upload = async({
               const percent = (bytesUploaded / totalBytes) * 100;
               //console.log("percent = %o", percent)
               //__progress(download_size, downloaded, upload_size, uploaded, percent)
-              progress(0, 0, totalBytes, bytesUploaded, percent);
+              progress(totalBytes, bytesUploaded, percent);
             }
 
 

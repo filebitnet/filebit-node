@@ -54,7 +54,7 @@ export const getSliceOffset = (fileSize) => {
   const chunklist = [];
   let bytesDone = 0;
   const offsetA = 512000;
-  const offsetB = 67108864;
+  const offsetB = 52428800;
   let chunk_id = 0;
   for (let i = 1; i <= 8; ++i) {
     if (bytesDone < fileSize) {

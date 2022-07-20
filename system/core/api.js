@@ -76,16 +76,15 @@ export default class CApi {
     return Buffer.from(data);
   }
 
-  async upload(server, upload_id, chunk_id, offset, buffer, kbps = 0, parent) {
+  async upload(server, upload_id, chunk_id, offset, buffer, kbps = 0, parent, Progress) {
     const url = ((this._ssl) ? 'https' : 'http') + '://' + server + '/storage/bucket/' + upload_id + '/add/' + chunk_id + '/' + offset[1] + '-' + offset[2];
 
-    //console.log("Uploading to: ", url);
     const json = await upload({
       url,
       buffer,
       ua: this._ua,
       kbps,
-      progress: parent.__progress.bind(parent),
+      progress: Progress, //parent.__progress.bind(parent),
       signal: parent._getSignal()
     });
     return json;

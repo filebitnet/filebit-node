@@ -23,6 +23,7 @@ program
   .option('--rate-limit <number>')
   .option('--bitfile-file <string>')
   .option('--bitfile-password <string>')
+  .option('--parallel <number>', 'default: 1')
   .option('--tpl <string>', 'output template ex: --tpl=\'{"link":"%s"}\'')
   .option('-p, --progress').action(async(args, options) => {
     const bfpw = ('bitfilePassword' in args) ? args.bitfilePassword : 'filebit';
@@ -31,6 +32,8 @@ program
     const BitFile = new CBitFile(bfpw);
     await BitFile.setPathAndFilename('./', bffn);
     BitFile.setType(1);
+
+    const parallel = ('parallel' in args && !isNaN(args.parallel)) ? Number(args.parallel) : 1;
 
     const Upload = new CUpload;
     Upload.on('finish', (link) => {
@@ -47,6 +50,7 @@ program
       Upload.setProgress(args.progress);
     }
     await Upload.init(args.file);
+    await Upload.setParallel(parallel);
     if ('rateLimit' in args && Number(args.rateLimit) > 0) {
       Upload.setRateLimit(Number(args.rateLimit));
     }
